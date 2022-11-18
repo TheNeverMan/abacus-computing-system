@@ -10,14 +10,14 @@ In this project however I changed abacus into fullblown mechanical computer that
 - actually lightweight and portable (say that to PC users)
 - works in any conditions (no restrictions on temperature or humidity)
 - easy to repair (no knowledge required)
-- can be used by anyone (no skill required).
+- can be used by anyone (no skill required).  
 It has no downsides too. Now lets move on to the general system architecture.
 How does it work? (General Idea)
 -----------------
 Abacus Computing System architecture is very similar to computer architecture. Abacus must have instructions stored in memory (program), a human that operates it (or anything else that has enough mindpower), and an output.
 1. Human reads next instruction from memory
 2. Executes it by modifying abacus state and/or memory
-3. Go to step 1
+3. Go to step 1  
 Program execution can stop after special commands or errors. If you haven't guessed yet, both "memory" and "output" are actually pieces of paper with commands written with pen or anything else, no electric-hdd-sdd-flash bullshit here! Only real memory with real data.
 How does it work? (Detailed)
 ---------------------------
@@ -31,5 +31,5 @@ Going from top to bottom:
 - Fifth and sixth is J register.
 - Seventh is E register.
 - Eight is P register.
-- Ninth and tenth is PC register.
+- Ninth and tenth is PC register.  
 The philosophy of this system is that abacus itself holds all data required for program to continue, so theoretically even if human-operator changed after each command it shouldn't affect program outcome at all.
