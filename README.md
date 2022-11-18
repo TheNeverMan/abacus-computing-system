@@ -52,6 +52,8 @@ Going from top to bottom:
  
  | Register | Direct Read | Direct Write |
  |---------:|-------------|--------------|
- |         A|
-
-
+ |         A|          yes|           yes|
+ |         B|          yes|           yes|
+ |         J|          yes|           yes|
+ |         E| special commands (conditional jumps)|            no| 
+ |    P & PC|           no| special commands (jumps)|
