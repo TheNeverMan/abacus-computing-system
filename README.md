@@ -99,4 +99,177 @@ Example:
 (row number) (command) (arguments)  (optional comments)
 34 mul J A B //Multiply A * B and store result in J   
 35 joo (4,35) //If Overflow happened jump to Row 35 on Page 4
+```  
+
+Arguments Notation
+-------------
+
+Commands can take 4 types of arguments: address, register, decimal value, character.   
+
+| Name | Notation | Example | Exceptions | Short Name |
+|------|----------|---------|------------|------------|
+|Register|Register name (A or B or J), eventually specifying the digit (H or L)| B | If is invalid (eg. trying to write to register PC) results in AE, if is unreadable, results in ME| reg |
+|Decimal Value| Decimal value from 0 to 99, prefixed with lowercase d| d54 | If out of range (0-99), results with ME. If unreadable, also ME| val |
+|Character| Single character in double quotes. | "x" | If unreadable, results in ME | (same as decimal value) |
+|Address| Pair of two values separated by comma in brackets. First value is page number, second row. These values can be either: register (value of register is used), decimal value, * (value of P (if considered as page address) or PC (if considered as row address)| (4,56) - Page 4 Row 56, (J, B) - Page Number is value of J, Row Number is value of B, (\*, JH) - Page number is equal to current command page, Row Number is tenths digit of J register| AE when pointing to invalid address, invalid register in address. ME is row in unreadable| addr |
+
+H & L digits respectively mean tenths digit of register or singulars digit of register:   
 ```
+J = 45
+JH = 4
+JL = 5
+```
+However during operations H digit is actually treated like tenths digit not singulars!
+```
+J = 45
+A = B + JH => A = B + 40
+(3,JH) => (3, 40)
+(3,JL) => (3, 5)
+Watch out!
+```
+
+List of Commands
+----------------
+
+`set out(reg, addr) in(val, reg, addr)` 
+Sets in to out. When in is one digit of register (eg. JL, AH), the other digit of out is not modified! You can not set incompatibile digits to each other (eg. set JL AH) - this results in ME.    
+
+`jmp addr(addr)`   
+Sets P and PC to addr or simply - jumps to addr.    
+
+`inc reg(reg)`   
+Increments reg by one.  
+
+`dec reg(reg)`   
+Decrements reg by one.   
+
+```
+add out(reg) in1(reg) in2(reg)
+sub out(reg) in1(reg) in2(reg)
+mul out(reg) in1(reg) in2(reg)
+div out(reg) in1(reg) in2(reg)
+mod out(reg) in1(reg) in2(reg)
+```
+Performs given arthmetic operation:    
+```
+add: out = in1 + in2
+sub: out = in1 - in2
+mul: out = in1 * in2
+div: out = in1 / in2
+mod: out = in1 % in2
+```
+All arguments can be same register. This could give following results:   
+- O - out is higher than 99
+- U - out is lower than 0
+- RE - Division by 0
+- Z - out is equal 0
+- N - out is rounded to whole number after division operation   
+ 
+ Remember about H & L digit behaviour:   
+ ```
+ J=34
+ B=25
+ JH + BH => 30 + 20 = 70
+ JH + JL => 30 + 4 = 34
+ ```
+ 
+ `jsb jump(addr, reg, val)`   
+ Jumps to given row address (if addr is provided as argument then value under it is taken) and saves current row number in J register.  
+ 
+ `ret`  
+ Sets PC to J,(returns from jsb).  
+ 
+ ```
+ joe addr(addr)
+ joz addr(addr)
+ joo addr(addr)
+ jou addr(addr)
+ jor addr(addr)
+ jon addr(addr)
+ ```
+ Performs conditional jump based on value in E register. If condition is not met this command is skiped. Important: THIS COMMAND DOES NOT OVERWRITE OR MODIFY E REGISTER AFTER EXECUTION!   
+ ```
+ joe - if last command result was error (RE, ME, IE)
+ joz - if last command result was zero (Z)
+ joo - if last command result was overflow
+ jou - if last command result was underflow
+ jor - if last commands result was success
+ jon - if last command result was rounding
+ ```
+ 
+  ```
+ jse jump(addr, reg, val)
+ jsz jump(addr, reg, val)
+ jso jump(addr, reg, val)
+ jsu jump(addr, reg, val)
+ jsr jump(addr, reg, val)
+ jsn jump(addr, reg, val)
+ ```
+ Performs conditional jump to provied row value (like `jsb`), and sets J register to current value of PC, based on value in E register. If condition is not met this command is skiped. Important: THIS COMMAND DOES NOT OVERWRITE OR MODIFY E REGISTER AFTER EXECUTION!   
+ ```
+ jse - if last command result was error (RE, ME, IE)
+ jsz - if last command result was zero (Z)
+ jso - if last command result was overflow
+ jsu - if last command result was underflow
+ jsr - if last commands result was success
+ jsn - if last command result was rounding
+ ```   
+ 
+ ```
+ joq addr(addr) v1(addr,val,reg) v2(addr,val,reg)
+ jsq jump(addr,val,reg) v1(addr,val,reg) v2(addr,val,reg)
+ ```
+ Performs conditional jump (`joq` - like `jmp` and `jsq` - like `jsb`) when v1 = v2  
+ 
+ `inp reg(reg)`  
+ Sets reg to value provided by user.  
+ 
+ `out reg(reg)`
+ Prints value of reg on output piece of paper.   
+ 
+ `neg reg(reg)`   
+ Negates reg, sets its value to its complementary number (eg. 12 => 98. 55 => 44).  
+ 
+ `rot reg(reg)`   
+ Rotates reg, reverses its digits (eg. 12 => 21, 55 => 55).  
+ 
+ `mor reg(reg)`
+ Equivalent of moving one bead from lower wire to higher (eg. 62 => 71, 55 => 64), causes RE if singulars digit is equal 0 (eg. 10)   
+ 
+ `smr reg(reg)`  
+ Similar to above, but if singular digit is equal to 0 adds nine to it (eg. 10 => 29).  
+ 
+ `ror reg(reg)`
+ Rotates reg upwards (tenths becomes singulars and singulars becomes 0).   
+ 
+ `rol reg(reg)` 
+ Rotates reg downwards (reversed version of above command).   
+ 
+ `sfd out(reg) in(addr,val,reg)`   
+ Sets L digit of out to L digit of in.   
+ 
+ `ssd out(reg) in(addr,val,reg)`  
+ Sets H digit of out to L digit of in. (Not like normal H & L behaviour).  
+ 
+ `end`   
+ Halts program.
+ 
+ `res`
+ Restarts abacus.   
+ 
+ `nop`
+ Does nothing.  
+ 
+ ```
+ adi out(reg) in(reg)
+ sui out(reg) in(reg)
+ mui out(reg) in(reg)
+ dii out(reg) in(reg)
+ moi out(reg) in(reg)
+ ```
+ Performs operation on both digits of in and stores result in out. This command does not behave like normal H & L operations:   
+ ```
+ J=56
+ add J JH JL => 56 = 50 + 6
+ adi J J => 11 = 5 + 6
+ ```
