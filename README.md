@@ -36,6 +36,7 @@ Every row can hold single instruction or single two digit number.
 
 Registers
 ---------
+
 Wires are divided in to registers, similarily to CPUs. 
 Going from top to bottom:  
 - First two wires are A register.
@@ -57,3 +58,45 @@ Going from top to bottom:
  |         J|          yes|           yes|
  |         E| special commands (conditional jumps)|            no| 
  |    P & PC|           no| special commands (jumps)|
+ 
+ Command Execution & Error Register
+ -------------------
+ 
+ Abacus executes command that P and PC point to. After execution PC is incremented (if it overflows back to 0 from 99, P is incremented to, if both P and PC overflow under incrementation they are resetted to 0) and E is set to outcome of command:
+ - 0 (R) Command was executed without any errors (success)
+ - 1 (O) Arthmetic Overflow (attempt to increment value past 99)
+ - 2 (U) Arthmetic Underflow (attempt to decrement value below 0)
+ - 3 (RE) Arthmetic Error (Division by 0)
+ - 4 (Z) Zero (Zero as result of operation)
+ - 5 (N) Arthmetic Rounding (Rounding on division operation)
+ - 6 (AE) Adress Error (Invalid Adress or Register)
+ - 7 (IE) I/O Error
+ - 8 (ME) Memory Error (Value or Command is unreadable)
+ - 9 (CE) Command Error (Invalid Command)    
+
+When command triggers CE, execution halts. If command triggered more than one state, one with highest value will be stored in E. When Overflow happens register value is set to 99 (on Underflow it is 0).
+ 
+Detailed Start-Up Procedure
+--------------------
+
+1. Reset value of all registers to zero.
+2. Prepare one blank piece of paper - it will be the "output".
+3. Prepare your program.
+4. Find first page of program, find boot address, set P and PC to it.
+5. Execute command at (P, PC).
+6. Increment PC.
+7. Set E to outcome of command.
+8. Halt if CE is outcome.
+9. Jump to step 5.   
+
+Commands List
+------------
+
+ACS is programmed with its own custom pseudoassembly language. Programs look very similar to assembly mnemonic listings. There must be one command per row, and every row should start with its number (row address).
+Command is three letter long, after it there should be space separated list of arguments. If you want to add comments, you should separate them from command with `//`.
+Example:   
+```
+(row number) (command) (arguments)  (optional comments)
+34 mul J A B //Multiply A * B and store result in J   
+35 joo (4,35) //If Overflow happened jump to Row 35 on Page 4
+```
